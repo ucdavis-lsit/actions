@@ -3,6 +3,14 @@ Collection of GitHub actions and workflows
 
 ## deploy.yml example
 ```yaml
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+name: Deploy to Amazon ECS
+
 jobs:
   build:
     uses:
@@ -12,6 +20,6 @@ jobs:
       cluster: 'ecs-cluster-name'
       service: 'ecs-service-name'
     secrets:
-      access-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      secret-key: $${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      secret-access-key: $${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```
