@@ -12,11 +12,16 @@ on:
       service:
         required: true
         type: string
+      certificate:
+        required: false
+        type: string
     secrets:
       access-key-id:
         required: true
       secret-access-key:
         required: true
+      aws-rds-cert:
+        required: false
 
 jobs:
   deploy:
@@ -26,6 +31,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Copy RDS cert
+        run: 'echo $AWS_RDS_CERT | base64 -d > ${{ inputs.certificate }}.pem'
+        shell: bash
+        env:
+          AWS_RDS_CERT: ${{ secrets.aws-rds-cert }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
