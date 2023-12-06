@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Copy RDS cert
-        run: 'echo $AWS_RDS_CERT | base64 -d > ${{ inputs.certificate }}.pem'
+        run: echo "$AWS_RDS_CERT" | base64 -d > ${{ inputs.certificate }}.pem
         shell: bash
         env:
           AWS_RDS_CERT: ${{ secrets.aws-rds-cert }}
