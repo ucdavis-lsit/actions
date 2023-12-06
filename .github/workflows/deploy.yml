@@ -15,6 +15,10 @@ on:
       certificate:
         required: false
         type: string
+      image-tag:
+        required: false
+        type: string
+        default: 'latest'
     secrets:
       access-key-id:
         required: true
@@ -32,11 +36,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Copy RDS cert
-        run: echo "$AWS_RDS_CERT" | base64 -d > ${{ inputs.certificate }}.pem
-        shell: bash
-        env:
-          AWS_RDS_CERT: ${{ secrets.aws-rds-cert }}
+      - name: Download PEM file
+        run: |
+          curl https://truststore.pki.rds.amazonaws.com/us-west-2/us-west-2-bundle.pem -o us-west-2-bundle.pem -s
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -49,10 +51,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: ECR push and ECS deploy
-        uses: jaroldwong/ecr-push-and-ecs-deploy@v1
-        with:
-          ecr-registry: ${{ steps.login-ecr.outputs.registry }}
-          ecr-repository: ${{ inputs.repo }}
-          ecs-cluster: ${{ inputs.cluster }}
-          ecs-service: ${{ inputs.service }}
+      - name: Build, tag, push to AWS ECR
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repo }}:${{ inputs.image-tag }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repo }}:${{ inputs.image-tag }}
+
+      - name : Force new AWS ECS deployment
+        run: |
+          aws ecs update-service --cluster ${{ inputs.cluster }} --service ${{ inputs.service }} --force-new-deployment
